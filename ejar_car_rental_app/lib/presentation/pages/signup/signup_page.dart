@@ -39,7 +39,7 @@ class SignupPage extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withOpacity(0.1),
+                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
                       filled: true,
                       prefixIcon: const Icon(Icons.person),
                     ),
@@ -51,7 +51,7 @@ class SignupPage extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withOpacity(0.1),
+                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
                       filled: true,
                       prefixIcon: const Icon(Icons.email),
                     ),
@@ -63,7 +63,7 @@ class SignupPage extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withOpacity(0.1),
+                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
                       filled: true,
                       prefixIcon: const Icon(Icons.password),
                     ),
@@ -76,7 +76,7 @@ class SignupPage extends StatelessWidget {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withOpacity(0.1),
+                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
                       filled: true,
                       prefixIcon: const Icon(Icons.password),
                     ),
@@ -105,7 +105,7 @@ class SignupPage extends StatelessWidget {
                   border: Border.all(color: Colors.black),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: (0.1 * 255).toDouble()),
                       spreadRadius: 1,
                       blurRadius: 1,
                       offset: const Offset(0, 1),

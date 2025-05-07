@@ -14,7 +14,7 @@ class LoginPage extends StatelessWidget {
           children: [
             _header(),
             _inputField(context),
-            _forgotPassword(),
+            _forgotPassword(context),
             _signup(context),
           ],
         ),
@@ -48,7 +48,7 @@ class LoginPage extends StatelessWidget {
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
                 borderSide: BorderSide.none),
-            fillColor: Colors.black.withOpacity(0.1),
+            fillColor: Color.fromARGB((0.1 * 255).toInt(), 0, 0, 0),
             filled: true,
             prefixIcon: const Icon(Icons.person),
           ),
@@ -60,7 +60,7 @@ class LoginPage extends StatelessWidget {
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(18),
                 borderSide: BorderSide.none),
-            fillColor: Colors.black.withOpacity(0.1),
+            fillColor: Color.fromARGB((0.1 * 255).toInt(), 0, 0, 0),
             filled: true,
             prefixIcon: const Icon(Icons.password),
           ),
@@ -76,19 +76,19 @@ class LoginPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             backgroundColor: Colors.black,
           ),
-          child: const Text("Login", style: TextStyle(fontSize: 20, color: Colors.white)),
+          child: const Text("Login", style: TextStyle( color: Colors.white)),
         ),
       ],
     );
   }
 
-  Widget _forgotPassword() {
+  Widget _forgotPassword(context) {
     return TextButton(
       onPressed: () {
-        // Add forgot password logic here
+        Navigator.of(context).pushReplacementNamed(AppRoutes.forgetpassword);
       },
       child: const Text("Forgot password?",
-          style: TextStyle(color: Colors.black)),
+          style: TextStyle(color: Colors.black, fontSize: 18)),
     );
   }
 
@@ -96,12 +96,12 @@ class LoginPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Don't have an account? "),
+        const Text("Don't have an account? " , style: TextStyle(fontSize: 18),),
         TextButton(
           onPressed: () {
             Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
           },
-          child: const Text("Sign Up", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w900)),
+          child: const Text("Sign Up", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w900, fontSize: 18)),
         ),
       ],
     );
