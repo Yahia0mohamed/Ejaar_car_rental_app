@@ -1,10 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../app/router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class SignupPage extends StatelessWidget {
+
+class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+
+
+class _SignupPageState extends State<SignupPage> {
+  final _usernameController = TextEditingController(); // Added
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _auth = FirebaseAuth.instance;
+  String _error = '';
+
+  @override
+  void dispose() {
+    _usernameController.dispose(); // Dispose it too
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signup() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _error = "Passwords do not match.";
+      });
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // Set display name (optional)
+      await userCredential.user?.updateDisplayName(_usernameController.text.trim());
+
+      // Navigate to home
+      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+    setState(() {
+    _error = e.message ?? "Sign up failed.";
+    });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +84,7 @@ class SignupPage extends StatelessWidget {
               Column(
                 children: <Widget>[
                   TextField(
+                    controller: _usernameController,
                     decoration: InputDecoration(
                       hintText: "Username",
                       border: OutlineInputBorder(
@@ -46,6 +97,7 @@ class SignupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                       hintText: "Email",
                       border: OutlineInputBorder(
@@ -58,6 +110,7 @@ class SignupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                       hintText: "Password",
                       border: OutlineInputBorder(
@@ -71,6 +124,7 @@ class SignupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    controller: _confirmPasswordController,
                     decoration: InputDecoration(
                       hintText: "Confirm Password",
                       border: OutlineInputBorder(
@@ -85,11 +139,7 @@ class SignupPage extends StatelessWidget {
                 ],
               ),
               ElevatedButton(
-                onPressed: () {
-                  // After successful signup, go to login
-                  Navigator.of(context)
-                      .pushReplacementNamed(AppRoutes.login);
-                },
+                onPressed: _signup,
                 child: const Text("Sign up", style: TextStyle(fontSize: 20, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   shape: const StadiumBorder(),

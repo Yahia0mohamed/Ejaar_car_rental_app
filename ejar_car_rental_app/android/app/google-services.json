@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "222494631075",
+    "project_id": "ejjar-e47c6",
+    "storage_bucket": "ejjar-e47c6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:222494631075:android:6b491c41cfeaf478610b16",
+        "android_client_info": {
+          "package_name": "com.example.ejar_car_rental_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsxE0aNy-atqNlXiEE3WGIwl6Bj24BduY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
