@@ -90,7 +90,7 @@ class _SignupPageState extends State<SignupPage> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
+                      fillColor: Colors.black.withOpacity(0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.person),
                     ),
@@ -103,7 +103,7 @@ class _SignupPageState extends State<SignupPage> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
+                      fillColor: Colors.black.withOpacity(0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.email),
                     ),
@@ -116,7 +116,7 @@ class _SignupPageState extends State<SignupPage> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
+                      fillColor: Colors.black.withOpacity(0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.password),
                     ),
@@ -130,7 +130,7 @@ class _SignupPageState extends State<SignupPage> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none),
-                      fillColor: Colors.black.withValues(alpha: (0.1 * 255).toDouble()),
+                      fillColor: Colors.black.withOpacity(0.1),
                       filled: true,
                       prefixIcon: const Icon(Icons.password),
                     ),
@@ -155,7 +155,7 @@ class _SignupPageState extends State<SignupPage> {
                   border: Border.all(color: Colors.black),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: (0.1 * 255).toDouble()),
+                      color: Colors.black.withOpacity(0.1),
                       spreadRadius: 1,
                       blurRadius: 1,
                       offset: const Offset(0, 1),
