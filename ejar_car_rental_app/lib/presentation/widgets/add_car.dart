@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import '../../../models/car.dart';
+import '../../../api/car_api.dart';
+
 
 class ImageUploadModal extends StatefulWidget {
   const ImageUploadModal({Key? key}) : super(key: key);
@@ -16,6 +20,8 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
   final TextEditingController _carTypeController = TextEditingController();
   final TextEditingController _carModelController = TextEditingController();
   final TextEditingController _hourlyRateController = TextEditingController();
+
+  final CarApi _carApi = CarApi();
 
   @override
   void dispose() {
@@ -54,6 +60,11 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
           _carTypeController.text.trim().isNotEmpty &&
           _carModelController.text.trim().isNotEmpty &&
           _hourlyRateController.text.trim().isNotEmpty;
+
+  Future<String> _fileToBase64(File file) async {
+    final bytes = await file.readAsBytes();
+    return base64Encode(bytes);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,14 +163,30 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _canUpload
-                  ? () {
+                  ? () async {
+                List<String> base64Images = [];
+                for (File imgFile in _selectedImages) {
+                  String base64Str = await _fileToBase64(imgFile);
+                  base64Images.add(base64Str);
+                }
+                double hourlyRate = double.tryParse(_hourlyRateController.text.trim()) ?? 0.0;
+                Car newCar = Car(
+                  carType: _carTypeController.text.trim(),
+                  carModel: _carModelController.text.trim(),
+                  hourlyRate: hourlyRate,
+                  imageBase64s: base64Images,
+                );
+
+                await _carApi.addCar(newCar);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Uploading ${_carTypeController.text.trim()} - ${_carModelController.text.trim()} at EGP ${_hourlyRateController.text.trim()}/hr...',
+                      'Uploaded ${newCar.carType} - ${newCar.carModel} at EGP ${newCar.hourlyRate}/hr',
                     ),
                   ),
                 );
+
                 Navigator.pop(context);
               }
                   : null,
