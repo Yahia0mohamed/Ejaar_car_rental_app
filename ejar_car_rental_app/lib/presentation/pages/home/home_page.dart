@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/car_card.dart';
 import '../../widgets/drawer.dart';
@@ -10,7 +7,7 @@ import '../../../api/car_api.dart';
 
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   void _showImageUploadModal(BuildContext context) {
     showModalBottomSheet(
@@ -56,7 +53,9 @@ class HomePage extends StatelessWidget {
                 stream: CarApi().getAllCarsStream(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
+                    ));
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Error: ${snapshot.error}'));
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -77,6 +76,11 @@ class HomePage extends StatelessWidget {
                         type: car.carType,
                         rate: car.hourlyRate,
                         base64Image: base64Image,
+                        images: car.imageBase64s,
+                        plateCharacters: 'س خ م',
+                        plateNumbers: '123',
+                          latitude: 30.0444,
+                          longitude: 31.2357
                       );
                     },
                   );
@@ -88,6 +92,8 @@ class HomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showImageUploadModal(context),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.black87,
         child: const Icon(Icons.add),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:geolocator/geolocator.dart';
+
 import '../../../models/car.dart';
 import '../../../api/car_api.dart';
 
@@ -20,6 +22,11 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
   final TextEditingController _carTypeController = TextEditingController();
   final TextEditingController _carModelController = TextEditingController();
   final TextEditingController _hourlyRateController = TextEditingController();
+  final TextEditingController _carPlateCharactersController = TextEditingController();
+  final TextEditingController _carPlateNumbersController = TextEditingController();
+
+  double? _latitude;
+  double? _longitude;
 
   final CarApi _carApi = CarApi();
 
@@ -28,6 +35,8 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
     _carTypeController.dispose();
     _carModelController.dispose();
     _hourlyRateController.dispose();
+    _carPlateCharactersController.dispose();
+    _carPlateNumbersController.dispose();
     super.dispose();
   }
 
@@ -49,6 +58,62 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
     }
   }
 
+  Future<void> _getCurrentLocation() async {
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location permissions are denied. Please allow access.')),
+        );
+        return;
+      }
+    }
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Location services are disabled. Please enable them in settings.'),
+          action: SnackBarAction(
+            label: 'Open Settings',
+            onPressed: () async {
+              await Geolocator.openLocationSettings();
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Permissions permanently denied. Please enable them in app settings.'),
+          action: SnackBarAction(
+            label: 'Open Settings',
+            onPressed: () async {
+              await Geolocator.openAppSettings();
+            },
+          ),
+        ),
+      );
+      return;
+    }
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.best,
+    );
+
+    setState(() {
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Location set: ($_latitude, $_longitude)')),
+    );
+  }
+
+
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
@@ -59,7 +124,9 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
       _selectedImages.isNotEmpty &&
           _carTypeController.text.trim().isNotEmpty &&
           _carModelController.text.trim().isNotEmpty &&
-          _hourlyRateController.text.trim().isNotEmpty;
+          _hourlyRateController.text.trim().isNotEmpty &&
+          _carPlateCharactersController.text.trim().isNotEmpty &&
+          _carPlateNumbersController.text.trim().isNotEmpty;
 
   Future<String> _fileToBase64(File file) async {
     final bytes = await file.readAsBytes();
@@ -86,7 +153,24 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
 
           _buildInputField(controller: _carModelController, label: 'Car Model'),
           const SizedBox(height: 15),
-
+          Row(
+            children: [
+              Expanded(
+                child: _buildInputField(
+                  controller: _carPlateNumbersController,
+                  label: 'Plate Numbers',
+                ),
+              ),
+              const SizedBox(width: 16), // Space between inputs
+              Expanded(
+                child: _buildInputField(
+                  controller: _carPlateCharactersController,
+                  label: 'Plate Characters',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
           _buildInputField(
             controller: _hourlyRateController,
             label: 'Hourly Rate (EGP)',
@@ -94,9 +178,25 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
             keyboardType: TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildButton(Icons.my_location, 'Use Current Location', _getCurrentLocation),
+
+              _latitude != null && _longitude != null
+                  ? Text(
+                'Selected Location: ($_latitude, $_longitude)',
+                style: const TextStyle(color: Colors.black87),
+              )
+                  : const Text(
+                'No location selected yet.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
 
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildButton(Icons.photo_library, 'Gallery', _pickImages),
               _buildButton(Icons.camera_alt, 'Camera', _takePhoto),

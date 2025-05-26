@@ -1,78 +1,114 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'car_details.dart';
 
 class CarCard extends StatelessWidget {
   final String model;
   final String type;
   final double rate;
   final String base64Image;
+  final List<String> images;
+  final String plateCharacters;
+  final String plateNumbers;
+  final double latitude;
+  final double longitude;
 
   const CarCard({
-    Key? key,
+    super.key,
     required this.model,
     required this.type,
     required this.rate,
     required this.base64Image,
-  }) : super(key: key);
+    required this.images,
+    required this.plateCharacters,
+    required this.plateNumbers,
+    required this.latitude,
+    required this.longitude,
+  });
 
   @override
   Widget build(BuildContext context) {
     final imageBytes = base64Decode(base64Image);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Image.memory(
-            imageBytes,
-            width: 120,
-            height: 120,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return SizedBox(
+      height: 250,
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        color: Colors.white,
+        shadowColor: Colors.black87,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(model, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('Type: $type'),
-                Text('Rate: \$${rate.toStringAsFixed(2)}/hr'),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    imageBytes,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(model, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text('Type: $type'),
+                        Text('Rate: \$${rate.toStringAsFixed(2)}/hr'),
+                        ElevatedButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              builder: (context) => CarDetailsModal(
+                                model: model,
+                                type: type,
+                                rate: rate,
+                                images: images,
+                                plateCharacters: plateCharacters,
+                                plateNumbers: plateNumbers,
+                                latitude: latitude,
+                                longitude: longitude,
+                                onRent: () {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('You rented $model!')),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 7.5),
+                              backgroundColor: Colors.black,
+                              disabledBackgroundColor: Colors.black87,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              )
+                          ),
+                          child: const Text('Preview Details', style: TextStyle(color: Colors.white, fontSize: 14)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
-
-
-// class CarCard extends StatelessWidget {
-//   final String text;
-//
-//   const CarCard({Key? key, required this.text}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       margin: const EdgeInsets.symmetric(vertical: 8),
-//       child: Container(
-//         child: Row(
-//           children: [
-//             Lottie.asset(
-//               'assets/images/car_item.json',
-//               width: 200,
-//               height: 200,
-//               repeat: false,
-//               fit: BoxFit.contain,
-//
-//             ),
-//             Text(text),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
