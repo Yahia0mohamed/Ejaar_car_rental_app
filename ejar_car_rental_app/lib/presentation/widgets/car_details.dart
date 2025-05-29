@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class CarDetailsModal extends StatelessWidget {
   final String model;
   final String type;
@@ -28,6 +29,31 @@ class CarDetailsModal extends StatelessWidget {
     required this.longitude,
     this.onRent,
   });
+
+  Future<void> _openGoogleMapsRoute(BuildContext context) async {
+    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
+    try {
+      final success = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+        webViewConfiguration: const WebViewConfiguration(enableJavaScript: false),
+      );
+
+      if (!success) {
+        debugPrint('Could not launch the URL: $url');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open Google Maps')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error launching URL: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to launch Google Maps')),
+      );
+    }
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +102,7 @@ class CarDetailsModal extends StatelessWidget {
           // Map section with explicit dimensions
           Container(
             width: 400,
-            height: 250,
+            height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
@@ -117,7 +143,24 @@ class CarDetailsModal extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 20),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _openGoogleMapsRoute(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.directions, color: Colors.white),
+              label: const Text(
+                'Navigate with Google Maps',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
 
           Center(
             child: ElevatedButton(

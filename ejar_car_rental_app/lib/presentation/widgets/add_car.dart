@@ -27,6 +27,7 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
 
   double? _latitude;
   double? _longitude;
+  bool _locationFetched = false;
 
   final CarApi _carApi = CarApi();
 
@@ -58,60 +59,100 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
     }
   }
 
-  Future<void> _getCurrentLocation() async {
+  // Future<void> _getCurrentLocation() async {
+  //
+  //   LocationPermission permission = await Geolocator.checkPermission();
+  //   if (permission == LocationPermission.denied) {
+  //     permission = await Geolocator.requestPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Location permissions are denied. Please allow access.')),
+  //       );
+  //       return;
+  //     }
+  //   }
+  //   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   if (!serviceEnabled) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: const Text('Location services are disabled. Please enable them in settings.'),
+  //         action: SnackBarAction(
+  //           label: 'Open Settings',
+  //           onPressed: () async {
+  //             await Geolocator.openLocationSettings();
+  //           },
+  //         ),
+  //       ),
+  //     );
+  //     return;
+  //   }
+  //   if (permission == LocationPermission.deniedForever) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: const Text('Permissions permanently denied. Please enable them in app settings.'),
+  //         action: SnackBarAction(
+  //           label: 'Open Settings',
+  //           onPressed: () async {
+  //             await Geolocator.openAppSettings();
+  //           },
+  //         ),
+  //       ),
+  //     );
+  //     return;
+  //   }
+  //   final position = await Geolocator.getCurrentPosition(
+  //     desiredAccuracy: LocationAccuracy.best,
+  //   );
+  //
+  //   setState(() {
+  //     _latitude = position.latitude;
+  //     _longitude = position.longitude;
+  //   });
+  //
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text('Location set: ($_latitude, $_longitude)')),
+  //   );
+  // }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permissions are denied. Please allow access.')),
-        );
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('Location services are disabled.');
         return;
       }
-    }
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Location services are disabled. Please enable them in settings.'),
-          action: SnackBarAction(
-            label: 'Open Settings',
-            onPressed: () async {
-              await Geolocator.openLocationSettings();
-            },
-          ),
-        ),
-      );
-      return;
-    }
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Permissions permanently denied. Please enable them in app settings.'),
-          action: SnackBarAction(
-            label: 'Open Settings',
-            onPressed: () async {
-              await Geolocator.openAppSettings();
-            },
-          ),
-        ),
-      );
-      return;
-    }
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.best,
-    );
 
-    setState(() {
-      _latitude = position.latitude;
-      _longitude = position.longitude;
-    });
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('Location permissions are denied');
+          return;
+        }
+      }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Location set: ($_latitude, $_longitude)')),
-    );
+      if (permission == LocationPermission.deniedForever) {
+        print('Location permissions are permanently denied.');
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+        _locationFetched = true;
+      });
+    } catch (e) {
+      print('Error fetching location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch location: $e')),
+      );
+    }
   }
+
 
 
   void _removeImage(int index) {
@@ -126,7 +167,9 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
           _carModelController.text.trim().isNotEmpty &&
           _hourlyRateController.text.trim().isNotEmpty &&
           _carPlateCharactersController.text.trim().isNotEmpty &&
-          _carPlateNumbersController.text.trim().isNotEmpty;
+          _carPlateNumbersController.text.trim().isNotEmpty &&
+          _locationFetched;
+
 
   Future<String> _fileToBase64(File file) async {
     final bytes = await file.readAsBytes();
@@ -178,14 +221,14 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
             keyboardType: TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildButton(Icons.my_location, 'Use Current Location', _getCurrentLocation),
-
+              const SizedBox(height: 8),
               _latitude != null && _longitude != null
                   ? Text(
-                'Selected Location: ($_latitude, $_longitude)',
+                'Selected Location: (${_latitude!.toStringAsFixed(5)}, ${_longitude!.toStringAsFixed(5)})',
                 style: const TextStyle(color: Colors.black87),
               )
                   : const Text(
@@ -194,6 +237,7 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
               ),
             ],
           ),
+
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -275,6 +319,10 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
                   carModel: _carModelController.text.trim(),
                   hourlyRate: hourlyRate,
                   imageBase64s: base64Images,
+                  plateCharacters: _carPlateCharactersController.text.trim(),
+                  plateNumbers: _carPlateNumbersController.text.trim(),
+                  latitude: _latitude!,
+                  longitude: _longitude!,
                 );
 
                 await _carApi.addCar(newCar);

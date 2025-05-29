@@ -77,10 +77,10 @@ class HomePage extends StatelessWidget {
                         rate: car.hourlyRate,
                         base64Image: base64Image,
                         images: car.imageBase64s,
-                        plateCharacters: 'س خ م',
-                        plateNumbers: '123',
-                          latitude: 30.0444,
-                          longitude: 31.2357
+                        plateCharacters: car.plateCharacters,
+                        plateNumbers: car.plateNumbers,
+                          latitude: car.latitude,
+                          longitude: car.longitude
                       );
                     },
                   );

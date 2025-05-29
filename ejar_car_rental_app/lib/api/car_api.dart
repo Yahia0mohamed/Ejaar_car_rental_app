@@ -11,6 +11,9 @@ class CarApi {
 
   Future<List<Car>> getAllCars() async {
     final querySnapshot = await carsCollection.get();
+    for (var doc in querySnapshot.docs) {
+      print("Car doc data: ${doc.data()}"); // Add this
+    }
     return querySnapshot.docs
         .map((doc) => Car.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
