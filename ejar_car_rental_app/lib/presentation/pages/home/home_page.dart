@@ -24,6 +24,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text(
           'EJAAR',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
@@ -32,6 +33,7 @@ class HomePage extends StatelessWidget {
       ),
       drawer: AppDrawer(),
       body: Container(
+        color: Colors.white,
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [

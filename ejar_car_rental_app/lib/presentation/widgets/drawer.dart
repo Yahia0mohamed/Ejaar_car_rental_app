@@ -6,6 +6,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: Colors.white,
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -36,7 +37,7 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.account_circle),
             title: const Text('Profile'),
             onTap: () {
-              // Handle profile navigation
+              Navigator.of(context).pushNamed(AppRoutes.account);
             },
           ),
           ListTile(

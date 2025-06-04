@@ -59,62 +59,6 @@ class _ImageUploadModalState extends State<ImageUploadModal> {
     }
   }
 
-  // Future<void> _getCurrentLocation() async {
-  //
-  //   LocationPermission permission = await Geolocator.checkPermission();
-  //   if (permission == LocationPermission.denied) {
-  //     permission = await Geolocator.requestPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text('Location permissions are denied. Please allow access.')),
-  //       );
-  //       return;
-  //     }
-  //   }
-  //   bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //   if (!serviceEnabled) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: const Text('Location services are disabled. Please enable them in settings.'),
-  //         action: SnackBarAction(
-  //           label: 'Open Settings',
-  //           onPressed: () async {
-  //             await Geolocator.openLocationSettings();
-  //           },
-  //         ),
-  //       ),
-  //     );
-  //     return;
-  //   }
-  //   if (permission == LocationPermission.deniedForever) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: const Text('Permissions permanently denied. Please enable them in app settings.'),
-  //         action: SnackBarAction(
-  //           label: 'Open Settings',
-  //           onPressed: () async {
-  //             await Geolocator.openAppSettings();
-  //           },
-  //         ),
-  //       ),
-  //     );
-  //     return;
-  //   }
-  //   final position = await Geolocator.getCurrentPosition(
-  //     desiredAccuracy: LocationAccuracy.best,
-  //   );
-  //
-  //   setState(() {
-  //     _latitude = position.latitude;
-  //     _longitude = position.longitude;
-  //   });
-  //
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(content: Text('Location set: ($_latitude, $_longitude)')),
-  //   );
-  // }
-
-
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
