@@ -27,4 +27,13 @@ class CarApi {
           .toList();
     });
   }
+
+  Future<Car?> getCarById(String carId) async {
+    final doc = await carsCollection.doc(carId).get();
+    if (doc.exists) {
+      return Car.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }
+    return null;
+  }
+
 }

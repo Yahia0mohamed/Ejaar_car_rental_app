@@ -28,6 +28,6 @@ class AppRoutes {
     forgetpassword: (context) =>  OtpPage(),
     newpassword: (context) => const NewPasswordPage(),
     account : (context) => const AccountPage(),
-    purchase : (context) => const PurchasePage(),
+    // purchase : (context) => const PurchasePage(),
   };
 }

@@ -1,9 +1,26 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_card/awesome_card.dart';
+import '../../../api/transaction_api.dart';
+import '../../../models/car.dart';
+import '../../../models/transaction.dart';
 import '../../widgets/drawer.dart';
 
 class PurchasePage extends StatefulWidget {
-  const PurchasePage({super.key});
+  final DateTime startDate;
+  final DateTime endDate;
+  final int totalDays;
+  final int totalAmount;
+  final Car car;
+
+  const PurchasePage({
+    Key? key,
+    required this.startDate,
+    required this.endDate,
+    required this.totalDays,
+    required this.totalAmount,
+    required this.car,
+  }) : super(key: key);
 
   @override
   State<PurchasePage> createState() => _PurchasePageState();
@@ -11,23 +28,68 @@ class PurchasePage extends StatefulWidget {
 
 class _PurchasePageState extends State<PurchasePage> {
   final _formKey = GlobalKey<FormState>();
+  final TransactionAPI _transactionAPI = TransactionAPI();
 
   String cardNumber = '';
   String expiryDate = '';
-  String cardHolderName = 'Yahia Mohamed'; // put the user name here
+  String cardHolderName = '';
   String cvvCode = '';
 
-  // Helpers to split card number for display (if needed)
-  // But awesome_card expects full string with spaces, e.g. "1234 5678 9012 3456"
+  @override
+  void initState() {
+    super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    cardHolderName = currentUser?.displayName ?? 'Card Holder';
+  }
 
-  void _onPay() {
+  void _onPay() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState!.save();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment Successful!')),
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
-      // Here, add your payment logic.
+
+      try {
+        // Get current user
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception("User not logged in");
+        }
+
+        // Create transaction object
+        final transaction = RentalTransaction(
+          id: "",
+          userId: user.uid,
+          carId: widget.car.id!,
+          timestamp: DateTime.now(),
+          startDate: widget.startDate,
+          endDate: widget.endDate,
+        );
+
+        await _transactionAPI.addTransaction(transaction);
+
+        if (mounted) {
+          Navigator.of(context).pop(); // close loading dialog
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Payment Successful and Transaction Saved!')),
+          );
+
+          // Navigate back to home or another appropriate screen
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context).pop(); // close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Payment failed: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -48,6 +110,29 @@ class _PurchasePageState extends State<PurchasePage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Rental Summary Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rental Summary',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Car: ${widget.car.carModel}'),
+                    Text('Start Date: ${widget.startDate.toString().split(' ')[0]}'),
+                    Text('End Date: ${widget.endDate.toString().split(' ')[0]}'),
+                    Text('Total Days: ${widget.totalDays}'),
+                    Text('Total Amount: \$${widget.totalAmount}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
             CreditCard(
               cardNumber: cardNumber.isEmpty ? 'XXXX XXXX XXXX XXXX' : cardNumber,
               cardExpiry: expiryDate.isEmpty ? 'MM/YY' : expiryDate,
@@ -59,10 +144,11 @@ class _PurchasePageState extends State<PurchasePage> {
               showShadow: true,
               textName: 'Name',
               textExpiry: 'MM/YY',
+              height: 200,
             ),
             const SizedBox(height: 24),
 
-            // Simple form to input card details
+            // Payment Form
             Form(
               key: _formKey,
               child: Column(
@@ -73,7 +159,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       border: OutlineInputBorder(),
                       hintText: 'XXXX XXXX XXXX XXXX',
                     ),
-                    keyboardType: TextInputType.text,
+                    keyboardType: TextInputType.number,
                     maxLength: 19,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -84,10 +170,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       }
                       return null;
                     },
-                    onSaved: (value) {
-                      // format with spaces automatically or expect user input spaced
-                      cardNumber = value ?? '';
-                    },
+                    onSaved: (value) => cardNumber = value ?? '',
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -102,16 +185,13 @@ class _PurchasePageState extends State<PurchasePage> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter expiry date';
                       }
-                      // Basic format check MM/YY
                       final regex = RegExp(r'^(0[1-9]|1[0-2])\/?([0-9]{2})$');
                       if (!regex.hasMatch(value)) {
                         return 'Invalid expiry date';
                       }
                       return null;
                     },
-                    onSaved: (value) {
-                      expiryDate = value ?? '';
-                    },
+                    onSaved: (value) => expiryDate = value ?? '',
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -132,9 +212,7 @@ class _PurchasePageState extends State<PurchasePage> {
                       }
                       return null;
                     },
-                    onSaved: (value) {
-                      cvvCode = value ?? '';
-                    },
+                    onSaved: (value) => cvvCode = value ?? '',
                   ),
                 ],
               ),
@@ -147,7 +225,10 @@ class _PurchasePageState extends State<PurchasePage> {
                 backgroundColor: Colors.black87,
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
-              child: const Text('Pay Now', style: TextStyle(color: Colors.white)),
+              child: Text(
+                'Pay \$${widget.totalAmount}',
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),

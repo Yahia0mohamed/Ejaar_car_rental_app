@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import '../../../api/account_api.dart';
 import '../../../app/router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import '../../../models/account.dart';
 
 
 class SignupPage extends StatefulWidget {
@@ -44,8 +50,22 @@ class _SignupPageState extends State<SignupPage> {
         password: _passwordController.text.trim(),
       );
 
-      // Set display name (optional)
-      await userCredential.user?.updateDisplayName(_usernameController.text.trim());
+      final user = userCredential.user!;
+      await user.updateDisplayName(_usernameController.text.trim());
+
+      final sampleImageUrl = 'https://i.pravatar.cc/150?img=3';
+      final response = await http.get(Uri.parse(sampleImageUrl));
+      final imageBytes = response.bodyBytes;
+      final imageBase64 = base64Encode(imageBytes);
+
+      final account = Account(
+        id: user.uid,
+        username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
+        imageBase64: imageBase64,
+      );
+
+      await AccountAPI().saveAccount(account);
 
       // Navigate to home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);

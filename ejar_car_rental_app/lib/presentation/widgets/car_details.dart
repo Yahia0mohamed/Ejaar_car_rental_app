@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -8,6 +10,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/router.dart';
+import '../../models/car.dart';
+import '../pages/purchase/purchase_page.dart';
 
 Future<bool?> showIdCaptureDialog(BuildContext context) async {
   final ImagePicker picker = ImagePicker();
@@ -39,7 +43,7 @@ Future<bool?> showIdCaptureDialog(BuildContext context) async {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(horizontal:30, vertical: 15),
                   ),
                   icon: const Icon(Icons.camera_alt, color: Colors.black87),
                   label: Row(
@@ -65,7 +69,7 @@ Future<bool?> showIdCaptureDialog(BuildContext context) async {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   ),
                   icon: const Icon(Icons.camera_alt, color: Colors.black87),
                   label: Row(
@@ -113,6 +117,7 @@ Future<bool?> showIdCaptureDialog(BuildContext context) async {
 }
 
 class CarDetailsModal extends StatefulWidget {
+  final String carId;
   final String model;
   final String type;
   final double rate;
@@ -125,6 +130,7 @@ class CarDetailsModal extends StatefulWidget {
 
   const CarDetailsModal({
     super.key,
+    required this.carId,
     required this.model,
     required this.type,
     required this.rate,
@@ -206,16 +212,61 @@ class _CarDetailsModalState extends State<CarDetailsModal> {
     }
   }
 
-  void _handleRent(BuildContext context) async {
-    final proceed = await showIdCaptureDialog(context);
-    if (proceed == true) {
-      if (widget.onRent != null) widget.onRent!();
-      Navigator.pushNamed(context, AppRoutes.purchase);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ID captured. Proceeding with rental...')),
-      );
+  Future<void> _handleRent(BuildContext context) async {
+    // Create a Car object using your existing model
+    final car = Car(
+      id: widget.carId,
+      carType: widget.type,
+      carModel: widget.model,
+      hourlyRate: widget.rate,
+      imageBase64s: widget.images,
+      plateCharacters: widget.plateCharacters,
+      plateNumbers: widget.plateNumbers,
+      latitude: widget.latitude,
+      longitude: widget.longitude,
+    );
+
+    // Show ID capture dialog first
+    final shouldProceed = await showIdCaptureDialog(context);
+
+    if (shouldProceed == true) {
+      try {
+        // Get current user
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception("User not logged in.");
+        }
+
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Rental transaction created successfully')),
+          );
+
+          // Navigate to purchase page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PurchasePage(
+                car: car,
+                startDate: startDate!,
+                endDate: endDate!,
+                totalDays: totalDays,
+                totalAmount: totalAmount,
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating transaction: $e')),
+          );
+        }
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -74,6 +74,7 @@ class HomePage extends StatelessWidget {
                           : ''; // Default empty if none
 
                       return CarCard(
+                        carId: car.id.toString(),
                         model: car.carModel,
                         type: car.carType,
                         rate: car.hourlyRate,

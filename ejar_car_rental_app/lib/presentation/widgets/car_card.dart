@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'car_details.dart';
 
 class CarCard extends StatelessWidget {
+  final String carId;
   final String model;
   final String type;
   final double rate;
@@ -15,6 +16,7 @@ class CarCard extends StatelessWidget {
 
   const CarCard({
     super.key,
+    required this.carId,
     required this.model,
     required this.type,
     required this.rate,
@@ -73,6 +75,7 @@ class CarCard extends StatelessWidget {
                                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                               ),
                               builder: (context) => CarDetailsModal(
+                                carId: carId,
                                 model: model,
                                 type: type,
                                 rate: rate,
