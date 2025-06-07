@@ -6,6 +6,39 @@ import '../../../models/car.dart';
 import '../../../models/transaction.dart';
 import '../../widgets/drawer.dart';
 
+import 'package:flutter/services.dart';
+
+class MonthInputFormatter extends TextInputFormatter {
+  final RegExp _digitOnly = RegExp(r'^\d{0,2}$'); // Only allow 0–2 digits
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    final text = newValue.text;
+
+    // Allow deleting everything
+    if (text.isEmpty) return newValue;
+
+    // Allow only digits, max 2
+    if (!_digitOnly.hasMatch(text)) return oldValue;
+
+    // Allow partial input: "0", "1", "01", "12"
+    if (text.length == 1) {
+      return newValue;
+    }
+
+    // At 2 digits, check valid month
+    final value = int.tryParse(text);
+    if (value != null && value >= 1 && value <= 12) {
+      return newValue;
+    }
+
+    return oldValue; // Reject invalid like "00", "13"
+  }
+}
+
 class PurchasePage extends StatefulWidget {
   final DateTime startDate;
   final DateTime endDate;
@@ -30,16 +63,69 @@ class _PurchasePageState extends State<PurchasePage> {
   final _formKey = GlobalKey<FormState>();
   final TransactionAPI _transactionAPI = TransactionAPI();
 
+  final List<TextEditingController> _cardControllers =
+  List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+
+  final TextEditingController _monthController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
+
+
   String cardNumber = '';
   String expiryDate = '';
   String cardHolderName = '';
   String cvvCode = '';
+  String _previousValidMonth = '';
 
   @override
   void initState() {
     super.initState();
     final currentUser = FirebaseAuth.instance.currentUser;
-    cardHolderName = currentUser?.displayName ?? 'Card Holder';
+    cardHolderName = (currentUser?.displayName ?? 'Card Holder').toUpperCase();
+
+    for (var controller in _cardControllers) {
+      controller.addListener(_updateCardNumber);
+    }
+
+    _monthController.addListener(() {
+      final text = _monthController.text;
+
+      final validMonthRegex = RegExp(r'^(0?[1-9]|1[0-2])$');
+
+      if (text.isEmpty) {
+        _previousValidMonth = '';
+        return;
+      }
+
+      if (!validMonthRegex.hasMatch(text)) {
+        // Revert to previous valid month input
+        _monthController.text = _previousValidMonth;
+        _monthController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _previousValidMonth.length),
+        );
+      } else {
+        _previousValidMonth = text;
+      }
+    });
+  }
+  @override
+  void dispose() {
+    for (var controller in _cardControllers) {
+      controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    _monthController.dispose();
+    _yearController.dispose();
+    super.dispose();
+  }
+
+  void _updateCardNumber() {
+    final parts = _cardControllers.map((c) => c.text.padRight(4, ' ')).toList();
+    setState(() {
+      cardNumber = parts.join(' ');
+    });
   }
 
   void _onPay() async {
@@ -68,6 +154,12 @@ class _PurchasePageState extends State<PurchasePage> {
           startDate: widget.startDate,
           endDate: widget.endDate,
         );
+        print('Transaction to be added:');
+        print('  userId: ${transaction.userId}');
+        print('  carId: ${transaction.carId}');
+        print('  startDate: ${transaction.startDate}');
+        print('  endDate: ${transaction.endDate}');
+        print('  timestamp: ${transaction.timestamp}');
 
         await _transactionAPI.addTransaction(transaction);
 
@@ -111,28 +203,33 @@ class _PurchasePageState extends State<PurchasePage> {
         child: Column(
           children: [
             // Rental Summary Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rental Summary',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text('Car: ${widget.car.carModel}'),
-                    Text('Start Date: ${widget.startDate.toString().split(' ')[0]}'),
-                    Text('End Date: ${widget.endDate.toString().split(' ')[0]}'),
-                    Text('Total Days: ${widget.totalDays}'),
-                    Text('Total Amount: \$${widget.totalAmount}'),
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.all(4),  // padding inside the container
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              width: double.infinity,
+              child:Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Rental Summary',
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Car: ${widget.car.carModel}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),),
+                  Text('Start Date: ${widget.startDate.toString().split(' ')[0]}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),),
+                  Text('End Date: ${widget.endDate.toString().split(' ')[0]}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),),
+                  Text('Total Days: ${widget.totalDays}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),),
+                  Text('Total Amount: ${widget.totalAmount} EGP', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),),
+                ],
               ),
             ),
+            const SizedBox(height: 10),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.9, // 90% of screen width
+              height: 1, // thickness of the line
+              color: Colors.grey, // color of the line
+            ),
             const SizedBox(height: 24),
-
             CreditCard(
               cardNumber: cardNumber.isEmpty ? 'XXXX XXXX XXXX XXXX' : cardNumber,
               cardExpiry: expiryDate.isEmpty ? 'MM/YY' : expiryDate,
@@ -144,7 +241,7 @@ class _PurchasePageState extends State<PurchasePage> {
               showShadow: true,
               textName: 'Name',
               textExpiry: 'MM/YY',
-              height: 200,
+              height: 250,
             ),
             const SizedBox(height: 24),
 
@@ -153,45 +250,123 @@ class _PurchasePageState extends State<PurchasePage> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Card Number',
-                      border: OutlineInputBorder(),
-                      hintText: 'XXXX XXXX XXXX XXXX',
-                    ),
-                    keyboardType: TextInputType.number,
-                    maxLength: 19,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter card number';
-                      }
-                      if (value.replaceAll(' ', '').length != 16) {
-                        return 'Card number must be 16 digits';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) => cardNumber = value ?? '',
+                  // Inside the Form widget
+                  Row(
+                    children: List.generate(4, (index) {
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: index < 3 ? 8.0 : 0),
+                          child: TextFormField(
+                            controller: _cardControllers[index],
+                            focusNode: _focusNodes[index],
+                            decoration: InputDecoration(
+                              labelText: index == 0 ? 'Card Number' : null,
+                              border: const OutlineInputBorder(),
+                              hintText: 'XXXX',
+                            ),
+                            keyboardType: TextInputType.number,
+                            maxLength: 4,
+                            validator: (value) {
+                              if (value == null || value.length != 4) {
+                                return '';
+                              }
+                              return null;
+                            },
+
+                            // 👇 Replace these two with the updated versions
+                            onChanged: (value) {
+                              if (value.length == 4 && index < 3) {
+                                _focusNodes[index + 1].requestFocus();
+                              }
+
+                              setState(() {
+                                cardNumber = _cardControllers.map((c) => c.text.padRight(4, ' ')).join(' ');
+                              });
+
+                              print('Updated card number: $cardNumber');
+                            },
+                            onSaved: (value) {
+                              if (index == 3) {
+                                cardNumber = _cardControllers.map((c) => c.text.padRight(4, ' ')).join(' ');
+                              }
+                            },
+                          ),
+                        ),
+                      );
+                    }),
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Expiry Date',
-                      border: OutlineInputBorder(),
-                      hintText: 'MM/YY',
-                    ),
-                    keyboardType: TextInputType.text,
-                    maxLength: 5,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter expiry date';
-                      }
-                      final regex = RegExp(r'^(0[1-9]|1[0-2])\/?([0-9]{2})$');
-                      if (!regex.hasMatch(value)) {
-                        return 'Invalid expiry date';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) => expiryDate = value ?? '',
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _monthController,
+                          decoration: const InputDecoration(
+                            labelText: 'Month',
+                            hintText: 'MM',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          maxLength: 2,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            MonthInputFormatter(),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter MM';
+                            }
+                            final intVal = int.tryParse(value);
+                            if (intVal == null || intVal < 1 || intVal > 12) {
+                              return 'Invalid MM';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            if (value.length == 2) {
+                              FocusScope.of(context).nextFocus();
+                            }
+                            setState(() {
+                              expiryDate =
+                              '${_monthController.text.padLeft(2, '0')}/${_yearController.text.padLeft(2, '0')}';
+                            });
+                          },
+                          onSaved: (_) {
+                            expiryDate =
+                            '${_monthController.text.padLeft(2, '0')}/${_yearController.text.padLeft(2, '0')}';
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _yearController,
+                          decoration: const InputDecoration(
+                            labelText: 'Year',
+                            hintText: 'YY',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                          maxLength: 2,
+                          validator: (value) {
+                            if (value == null || value.isEmpty || value.length != 2) {
+                              return 'Enter YY';
+                            }
+                            return null;
+                          },
+                          onChanged: (value) {
+                            setState(() {
+                              expiryDate =
+                              '${_monthController.text.padLeft(2, '0')}/${_yearController.text.padLeft(2, '0')}';
+                            });
+                          },
+                          onSaved: (_) {
+                            expiryDate =
+                            '${_monthController.text.padLeft(2, '0')}/${_yearController.text.padLeft(2, '0')}';
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -226,7 +401,7 @@ class _PurchasePageState extends State<PurchasePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
               child: Text(
-                'Pay \$${widget.totalAmount}',
+                'Pay ${widget.totalAmount} EGP',
                 style: const TextStyle(color: Colors.white),
               ),
             ),

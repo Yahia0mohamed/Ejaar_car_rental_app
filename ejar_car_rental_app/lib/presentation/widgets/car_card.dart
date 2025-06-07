@@ -65,7 +65,7 @@ class CarCard extends StatelessWidget {
                         Text(model, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         Text('Type: $type'),
-                        Text('Rate: \$${rate.toStringAsFixed(2)}/hr'),
+                        Text('Rate: EGP ${rate.toStringAsFixed(2)}/day'),
                         ElevatedButton(
                           onPressed: () {
                             showModalBottomSheet(

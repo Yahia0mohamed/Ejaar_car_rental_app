@@ -41,20 +41,6 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.attach_money_outlined),
-            title: const Text('Transactions'),
-            onTap: () {
-              // Handle transactions navigation
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
-              // Handle settings navigation
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () {

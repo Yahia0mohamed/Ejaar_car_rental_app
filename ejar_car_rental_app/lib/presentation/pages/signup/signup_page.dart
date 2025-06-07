@@ -25,7 +25,6 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _auth = FirebaseAuth.instance;
-  String _error = '';
 
   @override
   void dispose() {
@@ -38,9 +37,12 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _signup() async {
     if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        _error = "Passwords do not match.";
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Passwords do not match."),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -67,17 +69,36 @@ class _SignupPageState extends State<SignupPage> {
 
       await AccountAPI().saveAccount(account);
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Sign up successful!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       // Navigate to home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } on FirebaseAuthException catch (e) {
-    setState(() {
-    _error = e.message ?? "Sign up failed.";
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? "Sign up failed."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 40),

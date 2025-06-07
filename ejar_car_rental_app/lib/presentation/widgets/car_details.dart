@@ -307,7 +307,7 @@ class _CarDetailsModalState extends State<CarDetailsModal> {
               const Text('Description:', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
               Text('Type: ${widget.type}', style: const TextStyle(fontSize: 22)),
               const SizedBox(height: 6),
-              Text('Rate: \$${widget.rate.toStringAsFixed(2)}/hr', style: const TextStyle(fontSize: 20)),
+              Text('Rate: EGP ${widget.rate.toStringAsFixed(2)}/day', style: const TextStyle(fontSize: 20)),
               const SizedBox(height: 20),
               _platePreview(widget.plateCharacters, widget.plateNumbers),
               const SizedBox(height: 20),
@@ -365,6 +365,7 @@ class _CarDetailsModalState extends State<CarDetailsModal> {
                         startDate == null
                             ? 'Select Start Date'
                             : 'Start: ${startDate!.toLocal().toString().split(' ')[0]}',
+                        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -376,6 +377,7 @@ class _CarDetailsModalState extends State<CarDetailsModal> {
                         endDate == null
                             ? 'Select End Date'
                             : 'End: ${endDate!.toLocal().toString().split(' ')[0]}',
+                        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
